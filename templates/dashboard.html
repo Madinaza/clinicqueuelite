@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Admin Dashboard</h1>
+<p class="subtitle">Clinic overview and system control</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>Total Doctors</h3>
+    <h1>{{ stats.doctors }}</h1>
+  </div>
+
+  <div class="card">
+    <h3>Active Patients</h3>
+    <h1>{{ stats.patients }}</h1>
+  </div>
+
+  <div class="card">
+    <h3>Waiting Requests</h3>
+    <h1>{{ stats.queue }}</h1>
+  </div>
+</div>
+
+{% endblock %}

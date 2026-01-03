@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Patient Requests</h1>
+<p class="subtitle">Accept or reject incoming appointments</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Patient</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r.patient_email }}</td>
+      <td>
+        <span class="badge pending">{{ r.status }}</span>
+      </td>
+      <td>
+        <a class="btn" href="/doctor/accept/{{ r.id }}">Accept</a>
+        <a class="btn btn-danger" href="/doctor/reject/{{ r.id }}">Reject</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClinicFlow</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-grid">
+
+<header class="header">
+  <div class="container navbar">
+    <a class="brand" href="/">
+      <span class="brand-badge"></span>
+      <span>ClinicFlow</span>
+    </a>
+
+    <nav class="navlinks">
+      <a class="nav-pill" href="/">Home</a>
+
+      {% if session.get("user_id") %}
+        {% if session.get("role") == "patient" %}
+          <a class="nav-pill" href="/patient/dashboard">My Appointments</a>
+        {% elif session.get("role") == "doctor" %}
+          <a class="nav-pill" href="/doctor/dashboard">Doctor Panel</a>
+        {% elif session.get("role") == "ADMIN" %}
+          <a class="nav-pill" href="/admin/dashboard">Admin Panel</a>
+        {% endif %}
+
+        <span class="user-chip">
+          <span class="dot"></span>
+          <span class="email">{{ session.get("email") }}</span>
+        </span>
+
+        <a class="btn btn-danger" href="/logout">Logout</a>
+      {% else %}
+        <a class="nav-pill" href="/login">Login</a>
+        <a class="btn btn-primary" href="/register">Create Account</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>© 2026 ClinicFlow — Healthcare Queue System</p>
+    <div class="footer-mini">
+      <span>Secure</span><span>•</span><span>Fast</span><span>•</span><span>Responsive</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

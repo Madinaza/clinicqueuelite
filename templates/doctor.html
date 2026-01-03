@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Doctors</h1>
+<p class="subtitle">All registered medical staff</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Department</th>
+      <th>Experience</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in doctors %}
+    <tr>
+      <td>{{ d.name }}</td>
+      <td>{{ d.branch }}</td>
+      <td>{{ d.experience }} yrs</td>
+      <td>
+        {% if d.status == "AVAILABLE" %}
+          <span class="badge accepted">Available</span>
+        {% else %}
+          <span class="badge pending">Busy</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

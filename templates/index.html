@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clinic Queue</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>🏥 Clinic Queue System</h1>
+
+<form method="POST" action="/add">
+    <input name="name" placeholder="Patient Name" required>
+    <select name="urgency">
+        <option value="1">Low</option>
+        <option value="2">Medium</option>
+        <option value="3">High</option>
+    </select>
+    <button>Add Patient</button>
+</form>
+
+<h2>Waiting Queue</h2>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Urgency</th>
+        <th>Action</th>
+    </tr>
+
+    {% for p in patients %}
+    <tr>
+        <td>{{ p[1] }}</td>
+        <td>{{ p[2] }}</td>
+        <td>
+            <a href="/next/{{ p[0] }}">Call Next</a>
+        </td>
+    </tr>
+    {% endfor %}
+
+    {% extends "base.html" %}
+{% block content %}
+
+<section class="panel">
+  <h1>ClinicFlow – Clinical Operations Overview</h1>
+
+  <p>
+    Real-time monitoring of patient flow, doctor workload,
+    and service-level compliance.
+  </p>
+
+  <ul>
+    <li>Live Queue Monitoring</li>
+    <li>Doctor Assignment & Operations</li>
+    <li>SLA Enforcement</li>
+    <li>Operational Analytics</li>
+  </ul>
+</section>
+
+{% endblock %}
+
+</table>
+
+</body>
+</html>

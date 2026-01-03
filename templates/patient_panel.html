@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero fade-up">
+  <div class="hero-box">
+    <div class="hero-inner">
+      <div>
+        <h1>My Appointments</h1>
+        <p class="subtitle">Track your requests and doctor responses.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card fade-up" style="margin-top:16px;">
+  <div class="card-pad">
+    {% if appointments and appointments|length > 0 %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Doctor</th>
+            <th>Branch</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in appointments %}
+          <tr>
+            <td>#{{ a.id }}</td>
+            <td>{{ a.doctor_name }}</td>
+            <td>{{ a.branch }}</td>
+
+            <td>
+              {% set s = (a.status or '')|lower %}
+              {% if s == 'waiting' %}
+                <span class="badge warn">WAITING</span>
+              {% elif s == 'accepted' %}
+                <span class="badge ok">ACCEPTED</span>
+              {% elif s == 'rejected' %}
+                <span class="badge danger">REJECTED</span>
+              {% elif s == 'cancelled' %}
+                <span class="badge neutral">CANCELLED</span>
+              {% else %}
+                <span class="badge neutral">{{ a.status }}</span>
+              {% endif %}
+            </td>
+
+            <td class="small">{{ a.created_at }}</td>
+
+            <td>
+              {% if (a.status or '')|upper == 'WAITING' %}
+                <a class="btn btn-danger" href="/patient/cancel/{{ a.id }}">Cancel</a>
+              {% else %}
+                <span class="small">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert">
+        You have no appointments yet. Go to <b>Home</b> and book an appointment.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

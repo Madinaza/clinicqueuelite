@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="page-hero fade-up">
+  <div class="page-hero-inner">
+    <div>
+      <h1 class="page-title">Our Medical Specialists</h1>
+      <p class="page-subtitle">
+        Choose a doctor and request an appointment in seconds. Track status updates in your dashboard.
+      </p>
+
+      <div class="hero-metrics">
+        <div class="metric">
+          <span class="label">System</span>
+          <span class="value">Live</span>
+        </div>
+
+        <div class="metric">
+          <span class="label">Avg Response</span>
+          <span class="value">~5 min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <div class="chip">
+        <span class="dot"></span>
+        <span>Realtime Queue</span>
+      </div>
+      <div class="chip">
+        <span>Secure • Fast • Responsive</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-head fade-up">
+  <div>
+    <h2>Available Doctors</h2>
+    <p>Book an appointment request. If you already have a waiting request, you’ll see “Waiting…”</p>
+  </div>
+</div>
+
+<section class="doctor-grid">
+  {% for d in doctors %}
+  <div class="doctor-pro fade-up">
+
+    <div class="doctor-pro-top">
+      <div>
+        <h3 class="doctor-name">{{ d.name }}</h3>
+        <div class="doctor-branch">{{ d.branch }}</div>
+      </div>
+
+      {% if d.status|lower == "available" %}
+        <span class="status-pill status-available">
+          <span class="dot"></span> Available
+        </span>
+      {% else %}
+        <span class="status-pill status-busy">
+          <span class="dot"></span> Busy
+        </span>
+      {% endif %}
+    </div>
+
+    <div class="kv">
+      <div class="kv-row"><b>Experience:</b> {{ d.experience }} years</div>
+      <div class="kv-row"><b>Address:</b> {{ d.address }}</div>
+      <div class="kv-row"><b>Avg. Response:</b> {{ d.avg_response_minutes }} min</div>
+      <div class="kv-row">
+  <b>Active Requests:</b> {{ d.active_requests }}
+</div>
+
+    </div>
+
+  <div class="doctor-footer">
+  <div class="avg">Avg. Response: {{ d.avg_response_minutes }} min</div>
+
+  {% if session.get("role") == "patient" %}
+    {% if d.id in waiting_doctor_ids %}
+      <button class="btn btn-wide btn-waiting" disabled>Waiting...</button>
+    {% else %}
+      <a class="btn btn-wide" href="/patient/request/{{ d.id }}">Book Appointment</a>
+    {% endif %}
+  {% else %}
+    <a class="btn btn-wide" href="/login">Login to Book</a>
+  {% endif %}
+</div>
+
+  </div>
+  {% endfor %}
+</section>
+
+{% endblock %}

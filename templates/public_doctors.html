@@ -1,0 +1,9 @@
+{% if d.requested %}
+  <button class="btn disabled" disabled>
+    ⏳ Waiting for response
+  </button>
+{% else %}
+  <a href="/request/{{ d.id }}" class="btn">
+    Request Appointment
+  </a>
+{% endif %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-hero fade-up">
+  <div class="page-hero-inner">
+    <div>
+      <h1 class="page-title">Admin Panel</h1>
+      <p class="page-subtitle">Manage doctors, monitor appointments, and keep the clinic running smoothly.</p>
+    </div>
+    <div class="hero-actions">
+      <span class="chip"><span class="dot"></span> System Live</span>
+      <span class="chip">Role: ADMIN</span>
+    </div>
+  </div>
+
+  <div class="hero-metrics">
+    <div class="metric">
+      <span class="label">Users</span>
+      <span class="value">{{ stats.users }}</span>
+    </div>
+    <div class="metric">
+      <span class="label">Doctors</span>
+      <span class="value">{{ stats.doctors }}</span>
+    </div>
+    <div class="metric">
+      <span class="label">Waiting</span>
+      <span class="value">{{ stats.waiting }}</span>
+    </div>
+    <div class="metric">
+      <span class="label">Active</span>
+      <span class="value">{{ stats.active }}</span>
+    </div>
+    <div class="metric">
+      <span class="label">Done Today</span>
+      <span class="value">{{ stats.done_today }}</span>
+    </div>
+  </div>
+</div>
+
+
+<div class="section-head fade-up">
+  <div>
+    <h2>Doctors</h2>
+    <p>Add new doctors, update availability, or remove doctors.</p>
+  </div>
+</div>
+
+<div class="grid fade-up">
+  <div class="col-6">
+    <div class="card card-pad">
+      <h3>Add Doctor</h3>
+      <form class="form" method="POST" action="/admin/doctor/add">
+        <div class="field">
+          <div class="label">Full Name</div>
+          <div class="input-wrap">
+            <span class="input-icon">👨‍⚕️</span>
+            <input class="input" name="name" placeholder="Dr. Example Name" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Branch</div>
+          <div class="input-wrap">
+            <span class="input-icon">🏥</span>
+            <input class="input" name="branch" placeholder="Cardiology" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Experience (years)</div>
+          <div class="input-wrap">
+            <span class="input-icon">⏱️</span>
+            <input class="input" name="experience" placeholder="10" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Address</div>
+          <div class="input-wrap">
+            <span class="input-icon">📍</span>
+            <input class="input" name="address" placeholder="Main Clinic - Floor 2" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Status</div>
+          <select class="input" name="status">
+            <option value="AVAILABLE">AVAILABLE</option>
+            <option value="BUSY">BUSY</option>
+            <option value="OFFLINE">OFFLINE</option>
+          </select>
+        </div>
+
+        <button class="btn w100" type="submit">Add Doctor</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-6">
+    <div class="card card-pad">
+      <h3>Doctor Directory</h3>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Doctor</th>
+            <th>Status</th>
+            <th style="width: 280px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in doctors %}
+          <tr>
+            <td>#{{ d.id }}</td>
+            <td>
+              <strong>{{ d.name }}</strong><br>
+              <span class="small">{{ d.branch }} • {{ d.experience }}y</span>
+            </td>
+            <td>
+              {% if d.status == 'AVAILABLE' %}
+                <span class="badge ok">AVAILABLE</span>
+              {% elif d.status == 'BUSY' %}
+                <span class="badge warn">BUSY</span>
+              {% else %}
+                <span class="badge danger">OFFLINE</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="/admin/doctor/status" style="display:inline-flex; gap:8px; flex-wrap:wrap;">
+                <input type="hidden" name="doctor_id" value="{{ d.id }}">
+                <select class="input" name="status" style="max-width:160px;">
+                  <option value="AVAILABLE" {% if d.status=='AVAILABLE' %}selected{% endif %}>AVAILABLE</option>
+                  <option value="BUSY" {% if d.status=='BUSY' %}selected{% endif %}>BUSY</option>
+                  <option value="OFFLINE" {% if d.status=='OFFLINE' %}selected{% endif %}>OFFLINE</option>
+                </select>
+                <button class="btn btn-outline" type="submit">Update</button>
+              </form>
+
+              <form method="POST" action="/admin/doctor/delete/{{ d.id }}" style="display:inline;">
+                <button class="btn btn-danger" type="submit" onclick="return confirm('Delete this doctor and related appointments?')">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if doctors|length == 0 %}
+          <tr><td colspan="4">No doctors found.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div class="section-head fade-up">
+  <div>
+    <h2>Appointments</h2>
+    <p>Monitor requests and optionally force status changes.</p>
+  </div>
+</div>
+
+<div class="card card-pad fade-up">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Patient</th>
+        <th>Doctor</th>
+        <th>Status</th>
+        <th style="width: 320px;">Admin Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in appointments %}
+      <tr>
+        <td>#{{ a.id }}</td>
+        <td>{{ a.patient_email }}</td>
+        <td>{{ a.doctor_name }} <span class="small">({{ a.branch }})</span></td>
+        <td>
+          {% if a.status == 'WAITING' %}
+            <span class="badge warn">WAITING</span>
+          {% elif a.status == 'ACCEPTED' %}
+            <span class="badge neutral">ACCEPTED</span>
+          {% elif a.status == 'IN_PROGRESS' %}
+            <span class="badge neutral">IN PROGRESS</span>
+          {% elif a.status == 'DONE' %}
+            <span class="badge ok">DONE</span>
+          {% elif a.status == 'REJECTED' %}
+            <span class="badge danger">REJECTED</span>
+          {% else %}
+            <span class="badge danger">{{ a.status }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="POST" action="/admin/appointment/status" style="display:inline-flex; gap:8px; flex-wrap:wrap;">
+            <input type="hidden" name="appointment_id" value="{{ a.id }}">
+            <select class="input" name="status" style="max-width:180px;">
+              <option value="WAITING">WAITING</option>
+              <option value="ACCEPTED">ACCEPTED</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="DONE">DONE</option>
+              <option value="REJECTED">REJECTED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+            <button class="btn btn-outline" type="submit">Apply</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if appointments|length == 0 %}
+      <tr><td colspan="5">No appointments yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

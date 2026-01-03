@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth">
+  <div class="auth-card pop">
+
+    <div class="auth-head">
+      <div class="auth-icon">🧾</div>
+      <div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Patient registration only.</p>
+      </div>
+    </div>
+
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="form">
+      <div class="field">
+        <div class="label">Email</div>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input class="input" type="email" name="email" placeholder="you@example.com" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Password</div>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input class="input" type="password" name="password" placeholder="Create password" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Confirm Password</div>
+        <div class="input-wrap">
+          <span class="input-icon">✅</span>
+          <input class="input" type="password" name="confirm_password" placeholder="Confirm password" required>
+        </div>
+      </div>
+
+      <button class="btn w100" type="submit">Create Account</button>
+
+      <div class="auth-links">
+        Already have an account? <a href="/login">Login</a>
+      </div>
+    </form>
+
+  </div>
+</section>
+{% endblock %}
