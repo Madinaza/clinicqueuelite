@@ -452,7 +452,7 @@ h2{
    FORMS (WHITE INPUTS EVERYWHERE)
    ========================================================= */
 .form{display:grid;gap:12px;margin-top:10px;}
-.field{display:grid;gap:6px;}
+.field{display:grid;gap:6px; margin: 20px;}
 .label{font-size:13px;color:var(--muted);font-weight:900;}
 
 .input{

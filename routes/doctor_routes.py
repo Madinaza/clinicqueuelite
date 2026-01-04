@@ -40,7 +40,7 @@ def dashboard():
         active=active,
         done=done,
         active_count=active_count,
-        waiting_count=waiting_count,
+        waiting_count=waiting_count
     )
 
 
@@ -76,7 +76,6 @@ def call_next_route():
 def accept(appointment_id):
     if not _require_doctor():
         return redirect("/login?next=/doctor/dashboard")
-
     doctor_id = get_current_doctor_id_from_session(session)
     accept_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
@@ -86,7 +85,6 @@ def accept(appointment_id):
 def reject(appointment_id):
     if not _require_doctor():
         return redirect("/login?next=/doctor/dashboard")
-
     doctor_id = get_current_doctor_id_from_session(session)
     reject_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
@@ -96,7 +94,6 @@ def reject(appointment_id):
 def start(appointment_id):
     if not _require_doctor():
         return redirect("/login?next=/doctor/dashboard")
-
     doctor_id = get_current_doctor_id_from_session(session)
     start_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
@@ -106,7 +103,6 @@ def start(appointment_id):
 def complete(appointment_id):
     if not _require_doctor():
         return redirect("/login?next=/doctor/dashboard")
-
     doctor_id = get_current_doctor_id_from_session(session)
     complete_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
@@ -116,7 +112,6 @@ def complete(appointment_id):
 def note(appointment_id):
     if not _require_doctor():
         return redirect("/login?next=/doctor/dashboard")
-
     doctor_id = get_current_doctor_id_from_session(session)
     note_text = request.form.get("note", "").strip()
     update_note(appointment_id, doctor_id, note_text)
