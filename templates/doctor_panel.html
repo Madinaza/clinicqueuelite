@@ -2,166 +2,146 @@
 {% block content %}
 
 {% if not doctor %}
-  <div class="card card-pad fade-up">
-    <h2>Doctor account not linked</h2>
-    <p class="subtitle">
-      No doctor profile is linked to this user yet. (Demo auto-link failed)
-    </p>
+  <div class="card card-pad">
+    <h2>Doctor not linked</h2>
+    <p class="subtitle">Login using doctor temp email/password from database seed.</p>
   </div>
 {% else %}
 
-<section class="page-hero fade-up">
-  <div class="page-hero-inner">
+<div class="hero-box fade-up">
+  <div class="hero-inner">
     <div>
-      <h1 class="page-title">Doctor Panel</h1>
-      <p class="page-subtitle">
-        Welcome, <b>{{ doctor.name }}</b> — {{ doctor.branch }}
+      <h1>Doctor Panel</h1>
+      <p class="subtitle">
+        {{ doctor.name }} • {{ doctor.branch }} • Status: <b>{{ doctor.status }}</b>
       </p>
+      <div class="small">Waiting: {{ waiting_count }} • Active: {{ active_count }}</div>
     </div>
 
-    <div class="hero-actions">
-      <a class="btn btn-outline" href="/doctor/call-next">Call Next</a>
-
-      <form method="POST" action="/doctor/status" style="display:flex; gap:10px; align-items:center;">
-        <select name="status" class="input" style="padding-left:12px; width:170px;">
-          <option value="AVAILABLE" {% if doctor.status=='AVAILABLE' %}selected{% endif %}>AVAILABLE</option>
-          <option value="BUSY" {% if doctor.status=='BUSY' %}selected{% endif %}>BUSY</option>
-          <option value="OFFLINE" {% if doctor.status=='OFFLINE' %}selected{% endif %}>OFFLINE</option>
-        </select>
-        <button class="btn btn-primary" type="submit">Update</button>
-      </form>
-    </div>
+    <form method="POST" action="/doctor/status" class="hero-actions">
+      <select class="input" name="status" style="min-width:220px;">
+        <option value="AVAILABLE" {% if doctor.status=="AVAILABLE" %}selected{% endif %}>AVAILABLE</option>
+        <option value="BUSY" {% if doctor.status=="BUSY" %}selected{% endif %}>BUSY</option>
+        <option value="OFFLINE" {% if doctor.status=="OFFLINE" %}selected{% endif %}>OFFLINE</option>
+      </select>
+      <button class="btn btn-primary" type="submit">Update Status</button>
+      <a class="btn" href="/doctor/call-next">Call Next</a>
+    </form>
   </div>
-
-  <div class="hero-metrics">
-    <div class="metric">
-      <span class="label">Active Requests</span>
-      <span class="value">{{ active_count }}</span>
-    </div>
-    <div class="metric">
-      <span class="label">Waiting Now</span>
-      <span class="value">{{ waiting_count }}</span>
-    </div>
-    <div class="metric">
-      <span class="label">Availability</span>
-      <span class="value">{{ doctor.status }}</span>
-    </div>
-  </div>
-</section>
-
-<div class="section-head">
-  <h2>Waiting Requests</h2>
-  <p>Accept or reject incoming appointment requests.</p>
 </div>
 
-<div class="card card-pad pop">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Patient</th>
-        <th>Status</th>
-        <th style="width:240px;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
+<div class="grid" style="margin-top:16px;">
+  <div class="col-12 card card-pad fade-up">
+    <h2>Waiting Requests</h2>
+    <p class="subtitle">Accept or reject scheduled requests.</p>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Patient</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for r in waiting %}
-      <tr>
-        <td>#{{ r.id }}</td>
-        <td>{{ r.patient_email }}</td>
-        <td><span class="badge warn">WAITING</span></td>
-        <td>
-          <a class="btn btn-primary" href="/doctor/accept/{{ r.id }}">Accept</a>
-          <a class="btn btn-danger" href="/doctor/reject/{{ r.id }}">Reject</a>
-        </td>
-      </tr>
+        <tr>
+          <td>#{{ r.id }}</td>
+          <td>{{ r.patient_email }}</td>
+          <td>{{ r.appt_date or "-" }}</td>
+          <td>{{ r.appt_time or "-" }}</td>
+          <td>{{ r.status }}</td>
+          <td>
+            <a class="btn btn-primary" href="/doctor/accept/{{ r.id }}">Accept</a>
+            <a class="btn btn-danger" href="/doctor/reject/{{ r.id }}">Reject</a>
+          </td>
+        </tr>
       {% endfor %}
-
-      {% if waiting|length == 0 %}
-      <tr><td colspan="4" class="small">No waiting requests.</td></tr>
+      {% if not waiting %}
+        <tr><td colspan="6" class="small">No waiting requests.</td></tr>
       {% endif %}
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
 
-<div class="section-head">
-  <h2>In Progress</h2>
-  <p>Move accepted appointments through the workflow.</p>
-</div>
+  <div class="col-12 card card-pad fade-up">
+    <h2>In Progress</h2>
+    <p class="subtitle">Move accepted appointments through the workflow.</p>
 
-<div class="card card-pad pop">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Patient</th>
-        <th>Status</th>
-        <th style="width:260px;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Patient</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for r in active %}
-      <tr>
-        <td>#{{ r.id }}</td>
-        <td>{{ r.patient_email }}</td>
-        <td>
-          {% if r.status == 'ACCEPTED' %}
-            <span class="badge neutral">ACCEPTED</span>
-          {% else %}
-            <span class="badge ok">IN_PROGRESS</span>
-          {% endif %}
-        </td>
-        <td>
-          {% if r.status == 'ACCEPTED' %}
-            <a class="btn btn-outline" href="/doctor/start/{{ r.id }}">Mark In Progress</a>
-          {% else %}
+        <tr>
+          <td>#{{ r.id }}</td>
+          <td>{{ r.patient_email }}</td>
+          <td>{{ r.appt_date or "-" }}</td>
+          <td>{{ r.appt_time or "-" }}</td>
+          <td>{{ r.status }}</td>
+          <td style="min-width:260px;">
+            <form method="POST" action="/doctor/note/{{ r.id }}" style="display:flex;gap:8px;align-items:center;">
+              <input class="input" name="note" value="{{ r.note or '' }}" placeholder="Add note..." style="padding-left:12px;">
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </td>
+          <td>
+            {% if r.status == "ACCEPTED" %}
+              <a class="btn btn-primary" href="/doctor/start/{{ r.id }}">Start</a>
+            {% endif %}
             <a class="btn btn-primary" href="/doctor/complete/{{ r.id }}">Complete</a>
-          {% endif %}
-        </td>
-      </tr>
+          </td>
+        </tr>
       {% endfor %}
-
-      {% if active|length == 0 %}
-      <tr><td colspan="4" class="small">No active appointments.</td></tr>
+      {% if not active %}
+        <tr><td colspan="7" class="small">No active appointments.</td></tr>
       {% endif %}
-    </tbody>
-  </table>
-</div>
+      </tbody>
+    </table>
+  </div>
 
-<div class="section-head">
-  <h2>Recent History</h2>
-  <p>Last completed / rejected requests.</p>
-</div>
+  <div class="col-12 card card-pad fade-up">
+    <h2>Recent History</h2>
+    <p class="subtitle">Last completed / rejected / cancelled requests.</p>
 
-<div class="card card-pad pop">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Patient</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Patient</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
       {% for r in done %}
-      <tr>
-        <td>#{{ r.id }}</td>
-        <td>{{ r.patient_email }}</td>
-        <td>
-          {% if r.status == 'DONE' %}
-            <span class="badge ok">DONE</span>
-          {% else %}
-            <span class="badge danger">REJECTED</span>
-          {% endif %}
-        </td>
-      </tr>
+        <tr>
+          <td>#{{ r.id }}</td>
+          <td>{{ r.patient_email }}</td>
+          <td>{{ r.appt_date or "-" }}</td>
+          <td>{{ r.appt_time or "-" }}</td>
+          <td>{{ r.status }}</td>
+        </tr>
       {% endfor %}
-
-      {% if done|length == 0 %}
-      <tr><td colspan="3" class="small">No history yet.</td></tr>
+      {% if not done %}
+        <tr><td colspan="5" class="small">No history yet.</td></tr>
       {% endif %}
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endif %}

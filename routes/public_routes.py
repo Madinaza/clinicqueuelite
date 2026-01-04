@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, request
 from database import get_db
 
 public_bp = Blueprint("public", __name__)
@@ -45,8 +45,15 @@ def home():
         rows = db.execute("""
             SELECT doctor_id
             FROM appointments
-            WHERE patient_id=? AND status='WAITING'
+            WHERE patient_id = ? AND status = 'WAITING'
         """, (session["user_id"],)).fetchall()
         waiting_doctor_ids = {r["doctor_id"] for r in rows}
 
-    return render_template("home.html", doctors=doctors, waiting_doctor_ids=waiting_doctor_ids)
+    error = request.args.get("error")  # slot_taken / pick_datetime / not_available
+
+    return render_template(
+        "home.html",
+        doctors=doctors,
+        waiting_doctor_ids=waiting_doctor_ids,
+        error=error
+    )

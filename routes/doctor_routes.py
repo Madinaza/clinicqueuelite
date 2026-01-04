@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, session, request
 from services.doctor_service import (
-    get_or_link_doctor_for_user,
+    get_current_doctor_id_from_session,
+    get_doctor,
     update_doctor_status,
     get_doctor_requests,
     get_counts,
@@ -9,42 +10,28 @@ from services.doctor_service import (
     start_request,
     complete_request,
     call_next,
+    update_note,
 )
 
 doctor_bp = Blueprint("doctor", __name__, url_prefix="/doctor")
 
 
 def _require_doctor():
-    # doctor temp login sets session["doctor_id"]
-    return session.get("role") == "doctor" and session.get("doctor_id") is not None
-
-
-def _current_doctor():
-    """
-    We trust session['doctor_id'] first (temp doctor login).
-    If missing, fallback to linking (older flow).
-    """
-    if session.get("doctor_id"):
-        # doctor_service can treat this as doctor id directly
-        # BUT to keep compatibility with your service, we return a dict shape with id
-        return {"id": session["doctor_id"]}
-    # fallback (if you still support doctor users inside users table)
-    if session.get("user_id"):
-        return get_or_link_doctor_for_user(session["user_id"])
-    return None
+    return session.get("user_id") and session.get("role") == "doctor"
 
 
 @doctor_bp.route("/dashboard")
 def dashboard():
     if not _require_doctor():
-        return redirect("/login")
+        return redirect("/login?next=/doctor/dashboard")
 
-    doctor = _current_doctor()
-    if not doctor:
+    doctor_id = get_current_doctor_id_from_session(session)
+    if not doctor_id:
         return render_template("doctor_panel.html", doctor=None)
 
-    waiting, active, done = get_doctor_requests(doctor["id"])
-    active_count, waiting_count = get_counts(doctor["id"])
+    doctor = get_doctor(doctor_id)
+    waiting, active, done = get_doctor_requests(doctor_id)
+    active_count, waiting_count = get_counts(doctor_id)
 
     return render_template(
         "doctor_panel.html",
@@ -60,58 +47,77 @@ def dashboard():
 @doctor_bp.route("/status", methods=["POST"])
 def status():
     if not _require_doctor():
-        return redirect("/login")
+        return redirect("/login?next=/doctor/dashboard")
 
-    doctor = _current_doctor()
-    if not doctor:
+    doctor_id = get_current_doctor_id_from_session(session)
+    if not doctor_id:
         return redirect("/doctor/dashboard")
 
     new_status = request.form.get("status", "AVAILABLE")
     if new_status not in ("AVAILABLE", "BUSY", "OFFLINE"):
         new_status = "AVAILABLE"
 
-    update_doctor_status(doctor["id"], new_status)
+    update_doctor_status(doctor_id, new_status)
     return redirect("/doctor/dashboard")
 
 
 @doctor_bp.route("/call-next")
 def call_next_route():
     if not _require_doctor():
-        return redirect("/login")
+        return redirect("/login?next=/doctor/dashboard")
 
-    doctor = _current_doctor()
-    if doctor:
-        call_next(doctor["id"])
+    doctor_id = get_current_doctor_id_from_session(session)
+    if doctor_id:
+        call_next(doctor_id)
     return redirect("/doctor/dashboard")
 
 
 @doctor_bp.route("/accept/<int:appointment_id>")
 def accept(appointment_id):
     if not _require_doctor():
-        return redirect("/login")
-    accept_request(appointment_id)
+        return redirect("/login?next=/doctor/dashboard")
+
+    doctor_id = get_current_doctor_id_from_session(session)
+    accept_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
 
 
 @doctor_bp.route("/reject/<int:appointment_id>")
 def reject(appointment_id):
     if not _require_doctor():
-        return redirect("/login")
-    reject_request(appointment_id)
+        return redirect("/login?next=/doctor/dashboard")
+
+    doctor_id = get_current_doctor_id_from_session(session)
+    reject_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
 
 
 @doctor_bp.route("/start/<int:appointment_id>")
 def start(appointment_id):
     if not _require_doctor():
-        return redirect("/login")
-    start_request(appointment_id)
+        return redirect("/login?next=/doctor/dashboard")
+
+    doctor_id = get_current_doctor_id_from_session(session)
+    start_request(appointment_id, doctor_id)
     return redirect("/doctor/dashboard")
 
 
 @doctor_bp.route("/complete/<int:appointment_id>")
 def complete(appointment_id):
     if not _require_doctor():
-        return redirect("/login")
-    complete_request(appointment_id)
+        return redirect("/login?next=/doctor/dashboard")
+
+    doctor_id = get_current_doctor_id_from_session(session)
+    complete_request(appointment_id, doctor_id)
+    return redirect("/doctor/dashboard")
+
+
+@doctor_bp.route("/note/<int:appointment_id>", methods=["POST"])
+def note(appointment_id):
+    if not _require_doctor():
+        return redirect("/login?next=/doctor/dashboard")
+
+    doctor_id = get_current_doctor_id_from_session(session)
+    note_text = request.form.get("note", "").strip()
+    update_note(appointment_id, doctor_id, note_text)
     return redirect("/doctor/dashboard")

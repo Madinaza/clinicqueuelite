@@ -1,93 +1,128 @@
 {% extends "base.html" %}
 {% block content %}
 
-<section class="page-hero fade-up">
+<div class="page-hero pop">
   <div class="page-hero-inner">
     <div>
-      <h1 class="page-title">Our Medical Specialists</h1>
+      <h1 class="page-title">Book an appointment</h1>
       <p class="page-subtitle">
-        Choose a doctor and request an appointment in seconds. Track status updates in your dashboard.
+        Choose a doctor, select a date & time, and submit a request.
+        Doctor confirms in the Doctor Panel.
       </p>
-
-      <div class="hero-metrics">
-        <div class="metric">
-          <span class="label">System</span>
-          <span class="value">Live</span>
-        </div>
-
-        <div class="metric">
-          <span class="label">Avg Response</span>
-          <span class="value">~5 min</span>
-        </div>
-      </div>
     </div>
 
     <div class="hero-actions">
-      <div class="chip">
-        <span class="dot"></span>
-        <span>Realtime Queue</span>
-      </div>
-      <div class="chip">
-        <span>Secure • Fast • Responsive</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-head fade-up">
-  <div>
-    <h2>Available Doctors</h2>
-    <p>Book an appointment request. If you already have a waiting request, you’ll see “Waiting…”</p>
-  </div>
-</div>
-
-<section class="doctor-grid">
-  {% for d in doctors %}
-  <div class="doctor-pro fade-up">
-
-    <div class="doctor-pro-top">
-      <div>
-        <h3 class="doctor-name">{{ d.name }}</h3>
-        <div class="doctor-branch">{{ d.branch }}</div>
-      </div>
-
-      {% if d.status|lower == "available" %}
-        <span class="status-pill status-available">
-          <span class="dot"></span> Available
-        </span>
-      {% else %}
-        <span class="status-pill status-busy">
-          <span class="dot"></span> Busy
-        </span>
+      {% if error == "slot_taken" %}
+        <span class="chip"><span class="dot"></span> Slot already taken — pick another time</span>
+      {% elif error == "pick_datetime" %}
+        <span class="chip"><span class="dot"></span> Please choose date & time</span>
+      {% elif error == "not_available" %}
+        <span class="chip"><span class="dot"></span> Doctor not AVAILABLE right now</span>
       {% endif %}
     </div>
+  </div>
 
-    <div class="kv">
-      <div class="kv-row"><b>Experience:</b> {{ d.experience }} years</div>
-      <div class="kv-row"><b>Address:</b> {{ d.address }}</div>
-      <div class="kv-row"><b>Avg. Response:</b> {{ d.avg_response_minutes }} min</div>
-      <div class="kv-row">
-  <b>Active Requests:</b> {{ d.active_requests }}
+  <div class="hero-metrics">
+    <div class="metric">
+      <span class="label">Workflow</span>
+      <span class="value">WAITING → ACCEPTED → IN_PROGRESS → DONE</span>
+    </div>
+  </div>
 </div>
 
+<div class="section-head fade-up">
+  <h2>Doctors</h2>
+  <p>Availability & workload updates in real-time based on requests.</p>
+</div>
+
+<div class="doctor-grid">
+  {% for d in doctors %}
+    <div class="doctor-pro pop">
+      <div class="doctor-pro-top">
+        <div>
+          <div class="doctor-name">{{ d.name }}</div>
+          <div class="doctor-branch">{{ d.branch }} • {{ d.experience }} yrs</div>
+        </div>
+
+        {% if d.status == "AVAILABLE" %}
+          <span class="status-pill status-available"><span class="dot"></span> AVAILABLE</span>
+        {% elif d.status == "BUSY" %}
+          <span class="status-pill status-busy"><span class="dot"></span> BUSY</span>
+        {% else %}
+          <span class="status-pill"><span class="dot"></span> OFFLINE</span>
+        {% endif %}
+      </div>
+
+      <div class="kv">
+        <div class="kv-row"><b>Address:</b> {{ d.address }}</div>
+        <div class="kv-row"><b>Active requests:</b> {{ d.active_requests }}</div>
+        <div class="kv-row"><b>Avg response:</b> {{ d.avg_response_minutes }} min</div>
+      </div>
+
+      <div class="doctor-footer">
+        {% if not session.get("user_id") %}
+          <a class="btn btn-wide" href="/login?next=/">Login to Book</a>
+        {% elif session.get("role") != "patient" %}
+          <button class="btn btn-wide btn-disabled" disabled>Only patients can book</button>
+        {% else %}
+          {% set already_waiting = (d.id in waiting_doctor_ids) %}
+        <form method="POST" action="/patient/request/{{ d.id }}">
+  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+    <div class="field">
+      <div class="label">Date</div>
+      <input class="input" type="date" name="appt_date" required>
     </div>
 
-  <div class="doctor-footer">
-  <div class="avg">Avg. Response: {{ d.avg_response_minutes }} min</div>
+    <div class="field">
+      <div class="label">Time</div>
+      <input class="input" type="time" name="appt_time" required>
+    </div>
+  </div>
 
-  {% if session.get("role") == "patient" %}
-    {% if d.id in waiting_doctor_ids %}
-      <button class="btn btn-wide btn-waiting" disabled>Waiting...</button>
-    {% else %}
-      <a class="btn btn-wide" href="/patient/request/{{ d.id }}">Book Appointment</a>
-    {% endif %}
+  {% if d.status != "AVAILABLE" %}
+    <button class="btn btn-disabled w100" disabled>Not Available</button>
+  {% elif d.id in waiting_doctor_ids %}
+    <button class="btn btn-disabled w100" disabled>Waiting</button>
   {% else %}
-    <a class="btn btn-wide" href="/login">Login to Book</a>
+    <button class="btn w100">Book Appointment</button>
   {% endif %}
+</form>
+
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
 </div>
 
-  </div>
-  {% endfor %}
-</section>
+<script>
+  // set min date = today
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  const minDate = `${yyyy}-${mm}-${dd}`;
+
+  document.querySelectorAll('input[type="date"][name="appt_date"]').forEach(el => {
+    el.min = minDate;
+    if (!el.value) el.value = minDate;
+  });
+
+  // build 15-min slots 09:00 -> 17:00
+  function buildSlots(selectEl){
+    const start = 9 * 60;
+    const end = 17 * 60;
+    selectEl.innerHTML = "";
+    for (let m = start; m <= end; m += 15){
+      const h = String(Math.floor(m/60)).padStart(2,'0');
+      const mi = String(m%60).padStart(2,'0');
+      const opt = document.createElement("option");
+      opt.value = `${h}:${mi}`;
+      opt.textContent = `${h}:${mi}`;
+      selectEl.appendChild(opt);
+    }
+  }
+
+  document.querySelectorAll('select[name="appt_time"]').forEach(buildSlots);
+</script>
 
 {% endblock %}

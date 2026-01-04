@@ -1,9 +1,7 @@
-import os
 import sqlite3
 from flask import g
 
-# Use env var in deployment, fallback locally
-DB_PATH = os.environ.get("DB_PATH", "clinicflow.db")
+DB_PATH = "clinicflow.db"
 
 
 def get_db():
@@ -23,14 +21,15 @@ def close_db(e=None):
 
 def ensure_db():
     """
-    Creates tables + migrations + seeds.
-    Uses direct sqlite connection so it works outside Flask request context.
+    Runs outside request context.
+    - Creates tables (schema.sql)
+    - Adds missing columns (migrations)
+    - Seeds demo admin + doctors
     """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
 
-    # Create base tables
     with open("schema.sql", "r", encoding="utf-8") as f:
         conn.executescript(f.read())
 
@@ -38,7 +37,8 @@ def ensure_db():
         rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
         return any(r["name"] == col for r in rows)
 
-    # ---- migrations ----
+    # ---- migrations (safe for old DBs) ----
+        # ---- migrations for old DBs ----
     if not has_column("doctors", "user_id"):
         conn.execute("ALTER TABLE doctors ADD COLUMN user_id INTEGER UNIQUE")
 
@@ -54,15 +54,22 @@ def ensure_db():
     if not has_column("appointments", "completed_at"):
         conn.execute("ALTER TABLE appointments ADD COLUMN completed_at INTEGER")
 
-    # ---- seed temp logins ----
+    # ✅ booking date/time migrations
+    if not has_column("appointments", "appt_date"):
+        conn.execute("ALTER TABLE appointments ADD COLUMN appt_date TEXT")
+
+    if not has_column("appointments", "appt_time"):
+        conn.execute("ALTER TABLE appointments ADD COLUMN appt_time TEXT")
+
+    # ---- seed demo admin ----
     conn.execute("""
         INSERT OR IGNORE INTO users (email,password,role)
         VALUES ('admin@clinicflow.local','admin1234','ADMIN')
     """)
 
+    # ---- seed doctors with temp login ----
     conn.execute("""
-        INSERT OR IGNORE INTO doctors
-            (id,name,branch,experience,address,status,email,password)
+        INSERT OR IGNORE INTO doctors (id,name,branch,experience,address,status,email,password)
         VALUES
           (1,'Dr. Ahmed Hassan','Cardiology',12,'Main Clinic - Floor 2','AVAILABLE','ahmed@clinicflow.local','doctor123'),
           (2,'Dr. Sarah Ali','Dermatology',8,'West Wing - Room 14','AVAILABLE','sarah@clinicflow.local','doctor123'),

@@ -31,7 +31,6 @@ def login():
             return redirect("/doctor/dashboard")
         if user["role"] == "ADMIN":
             return redirect("/admin/dashboard")
-
         return redirect("/")
 
     return render_template("login.html")
@@ -50,8 +49,7 @@ def register():
         if email_exists(email):
             return render_template("register.html", error="Email already registered.")
 
-        ok = register_patient(email, password)
-        if not ok:
+        if not register_patient(email, password):
             return render_template("register.html", error="Could not register. Try again.")
 
         return redirect("/login")
@@ -63,6 +61,7 @@ def register():
 def forgot_password():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
+
         if not email_exists(email):
             return render_template("forgot_password.html", error="Email not found")
 

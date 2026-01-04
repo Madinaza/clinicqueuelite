@@ -6,14 +6,19 @@
     <div class="hero-inner">
       <div>
         <h1>My Appointments</h1>
-        <p class="subtitle">Track your requests and doctor responses.</p>
+        <p class="subtitle">All bookings with date & time. Cancel if still waiting/accepted.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-outline" href="/">Book New</a>
       </div>
     </div>
   </div>
 </div>
 
-<div class="card fade-up" style="margin-top:16px;">
+<div class="card pop" style="margin-top:16px;">
   <div class="card-pad">
+    <h2>Appointments</h2>
+
     {% if appointments and appointments|length > 0 %}
       <table class="table">
         <thead>
@@ -21,50 +26,41 @@
             <th>ID</th>
             <th>Doctor</th>
             <th>Branch</th>
+            <th>Date</th>
+            <th>Time</th>
             <th>Status</th>
-            <th>Created</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {% for a in appointments %}
+        {% for a in appointments %}
           <tr>
-            <td>#{{ a.id }}</td>
+            <td>{{ a.id }}</td>
             <td>{{ a.doctor_name }}</td>
             <td>{{ a.branch }}</td>
-
+            <td>{{ a.appt_date }}</td>
+            <td>{{ a.appt_time }}</td>
             <td>
-              {% set s = (a.status or '')|lower %}
-              {% if s == 'waiting' %}
-                <span class="badge warn">WAITING</span>
-              {% elif s == 'accepted' %}
-                <span class="badge ok">ACCEPTED</span>
-              {% elif s == 'rejected' %}
-                <span class="badge danger">REJECTED</span>
-              {% elif s == 'cancelled' %}
-                <span class="badge neutral">CANCELLED</span>
-              {% else %}
-                <span class="badge neutral">{{ a.status }}</span>
-              {% endif %}
+              {% if a.status == "WAITING" %}<span class="badge warn">WAITING</span>{% endif %}
+              {% if a.status == "ACCEPTED" %}<span class="badge neutral">ACCEPTED</span>{% endif %}
+              {% if a.status == "IN_PROGRESS" %}<span class="badge warn">IN PROGRESS</span>{% endif %}
+              {% if a.status == "DONE" %}<span class="badge ok">DONE</span>{% endif %}
+              {% if a.status == "REJECTED" %}<span class="badge danger">REJECTED</span>{% endif %}
+              {% if a.status == "CANCELLED" %}<span class="badge danger">CANCELLED</span>{% endif %}
             </td>
-
-            <td class="small">{{ a.created_at }}</td>
-
             <td>
-              {% if (a.status or '')|upper == 'WAITING' %}
+              {% if a.status in ["WAITING","ACCEPTED"] %}
                 <a class="btn btn-danger" href="/patient/cancel/{{ a.id }}">Cancel</a>
               {% else %}
                 <span class="small">—</span>
               {% endif %}
             </td>
           </tr>
-          {% endfor %}
+        {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <div class="alert">
-        You have no appointments yet. Go to <b>Home</b> and book an appointment.
-      </div>
+      <p class="subtitle">No appointments yet.</p>
     {% endif %}
   </div>
 </div>

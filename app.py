@@ -12,13 +12,9 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = "dev-secret-key-change-me"
 
-    # create/migrate/seed database
     ensure_db()
-
-    # close db at end of request
     app.teardown_appcontext(close_db)
 
-    # blueprints
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(patient_bp)
